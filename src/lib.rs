@@ -196,8 +196,12 @@ impl Voice {
             let intermediate_buffer_length = target_buffer.get_buffer().len();
             let intermediate_buffer_length = intermediate_buffer_length * channels as usize /
                                              target_channels as usize;
+            // divide by channels and then multiply, because the length must be
+            // a multiple of the number of channels.
             let intermediate_buffer_length = intermediate_buffer_length * samples_rate.0 as usize /
-                                             target_samples_rate.0 as usize;
+                                             target_channels as usize /
+                                             target_samples_rate.0 as usize *
+                                             target_channels as usize;
             let intermediate_buffer = std::iter::repeat(unsafe { std::mem::uninitialized() })
                                         .take(intermediate_buffer_length).collect();
 
@@ -311,6 +315,10 @@ impl<'a, T> Drop for Buffer<'a, T> where T: Sample {
                 SampleFormat::U16 => {
                     let buffer = Sample::to_vec_u16(&buffer);
                     write_to_buf!(buffer, output, u16);
+                },
+                SampleFormat::U24 => {
+                    let buffer = Sample::to_vec_u24(&buffer);
+                    write_to_buf!(buffer, output, u32);
                 },
                 SampleFormat::F32 => {
                     let buffer = Sample::to_vec_f32(&buffer);

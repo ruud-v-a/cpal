@@ -27,7 +27,7 @@ pub struct Buffer<'a, T: 'a> {
 
 impl Voice {
     pub fn new() -> Voice {
-        init().unwrap()
+        init().unwrap();
     }
 
     pub fn get_channels(&self) -> ::ChannelsCount {
@@ -41,7 +41,8 @@ impl Voice {
     pub fn get_samples_format(&self) -> ::SampleFormat {
         match self.bits_per_sample {
             16 => ::SampleFormat::U16,
-            _ => unimplemented!(),
+            32 => ::SampleFormat::U24,
+            _ => unimplemented!()
         }
     }
 

@@ -50,6 +50,38 @@ pub fn convert_samples_rate<T>(input: &[T], from: ::SamplesRate, to: ::SamplesRa
         return result;
     }
 
+    // If `to` is more than `from`, some samples need to be repeated.
+    if to > from {
+        let mut result = Vec::new();
+        // The following counters count in (from * to) Hz. For instance, if
+        // from is 3 Hz and to is 4 Hz, then we count steps of 12 Hz.
+        // We keep track of the time where we would like to be, and the time
+        // where we are. If the gap becomes big enough that it could be filled
+        // by repeating a sample, we do so. This is the most naive algorithm
+        // that one can imagine, it does not do any resampling.
+        // TODO: this will not always yield a buffer whose size is the expected
+        // size. We can dublicate samples in advance, in hindsight or half-way,
+        // (where half-way is the most accurate when the audio needs to be
+        // synchronised), but somehow we must be able to satisfy this length.
+        let mut desired_time = 0i64;
+        let mut push_time = 0i64;
+        for element in input.chunks(channels as usize) {
+            for e in element.iter() {
+                result.push(*e);
+            }
+            desired_time += to as i64;
+            push_time += from as i64;
+
+            while desired_time - push_time > 0 {
+                for e in element.iter() {
+                    result.push(*e);
+                }
+                push_time += from as i64
+            }
+        }
+        return result;
+    }
+
     unimplemented!()
 }
 
